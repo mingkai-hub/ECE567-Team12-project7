@@ -1,0 +1,311 @@
+Phase 1 Experiment Matrix
+
+Scope
+- Framework: BenchMARL
+- Environments: PettingZoo
+- Tasks:
+  - pettingzoo/simple_spread
+  - pettingzoo/simple_reference
+- Algorithms:
+  - mappo
+  - ippo
+  - qmix
+  - vdn
+- Seeds:
+  - 0
+  - 1
+  - 2
+
+Phase 1 Fixed Parameters
+- Action mode: discrete
+- experiment.prefer_continuous_actions=False
+- experiment.share_policy_params=True
+- experiment.sampling_device=cpu
+- experiment.train_device=cuda
+- experiment.buffer_device=cpu
+- experiment.max_n_frames=2000000
+- experiment.evaluation=True
+- experiment.render=False
+- experiment.evaluation_interval=120000
+- experiment.evaluation_episodes=5
+- experiment.evaluation_deterministic_actions=True
+- experiment.loggers=[csv]
+- experiment.checkpoint_interval=0
+- experiment.create_json=True
+- experiment.save_folder=/home/naikewu/RL/BenchMARL/phase1_outputs
+
+Model Parameters
+- model=layers/mlp
+- critic_model=layers/mlp
+- model.num_cells=[256,256]
+- critic_model.num_cells=[256,256]
+- model.activation_class=torch.nn.Tanh
+- critic_model.activation_class=torch.nn.Tanh
+
+Experiment Parameters Kept At BenchMARL Defaults
+- experiment.gamma=0.99
+- experiment.lr=0.00005
+- experiment.adam_eps=0.000001
+- experiment.clip_grad_norm=True
+- experiment.clip_grad_val=5
+- experiment.on_policy_collected_frames_per_batch=6000
+- experiment.on_policy_n_envs_per_worker=10
+- experiment.on_policy_n_minibatch_iters=45
+- experiment.on_policy_minibatch_size=400
+- experiment.off_policy_collected_frames_per_batch=6000
+- experiment.off_policy_n_envs_per_worker=10
+- experiment.off_policy_n_optimizer_steps=1000
+- experiment.off_policy_train_batch_size=128
+- experiment.off_policy_memory_size=1000000
+
+Algorithm Parameters Kept At Defaults
+- mappo:
+  - share_param_critic=True
+  - clip_epsilon=0.2
+  - entropy_coef=0.0
+  - critic_coef=1.0
+  - loss_critic_type=l2
+  - lmbda=0.9
+- ippo:
+  - share_param_critic=True
+  - clip_epsilon=0.2
+  - entropy_coef=0.0
+  - critic_coef=1.0
+  - loss_critic_type=l2
+  - lmbda=0.9
+- qmix:
+  - mixing_embed_dim=32
+  - delay_value=True
+  - loss_function=l2
+- vdn:
+  - delay_value=True
+  - loss_function=l2
+
+Why These Settings
+- We force discrete actions so mappo, ippo, qmix, and vdn are compared on the same action space.
+- We keep the algorithm-specific hyperparameters at BenchMARL defaults to avoid biasing the comparison by hand-tuning one method more than another.
+- We reduce max_n_frames from the default 3000000 to 2000000 so the 24 Phase 1 runs stay manageable on Great Lakes while still giving the runs enough time to separate.
+- We disable render and wandb-style logging to keep cluster runs lighter and more stable.
+
+Total Experiments
+- 2 tasks x 4 algorithms x 3 seeds = 24 runs
+
+Task 1: pettingzoo/simple_spread
+1. algorithm=mappo, task=pettingzoo/simple_spread, seed=0
+2. algorithm=mappo, task=pettingzoo/simple_spread, seed=1
+3. algorithm=mappo, task=pettingzoo/simple_spread, seed=2
+4. algorithm=ippo, task=pettingzoo/simple_spread, seed=0
+5. algorithm=ippo, task=pettingzoo/simple_spread, seed=1
+6. algorithm=ippo, task=pettingzoo/simple_spread, seed=2
+7. algorithm=qmix, task=pettingzoo/simple_spread, seed=0
+8. algorithm=qmix, task=pettingzoo/simple_spread, seed=1
+9. algorithm=qmix, task=pettingzoo/simple_spread, seed=2
+10. algorithm=vdn, task=pettingzoo/simple_spread, seed=0
+11. algorithm=vdn, task=pettingzoo/simple_spread, seed=1
+12. algorithm=vdn, task=pettingzoo/simple_spread, seed=2
+
+Task 2: pettingzoo/simple_reference
+13. algorithm=mappo, task=pettingzoo/simple_reference, seed=0
+14. algorithm=mappo, task=pettingzoo/simple_reference, seed=1
+15. algorithm=mappo, task=pettingzoo/simple_reference, seed=2
+16. algorithm=ippo, task=pettingzoo/simple_reference, seed=0
+17. algorithm=ippo, task=pettingzoo/simple_reference, seed=1
+18. algorithm=ippo, task=pettingzoo/simple_reference, seed=2
+19. algorithm=qmix, task=pettingzoo/simple_reference, seed=0
+20. algorithm=qmix, task=pettingzoo/simple_reference, seed=1
+21. algorithm=qmix, task=pettingzoo/simple_reference, seed=2
+22. algorithm=vdn, task=pettingzoo/simple_reference, seed=0
+23. algorithm=vdn, task=pettingzoo/simple_reference, seed=1
+24. algorithm=vdn, task=pettingzoo/simple_reference, seed=2
+
+Suggested Run Order
+1. mappo + simple_spread + seeds 0,1,2
+2. ippo + simple_spread + seeds 0,1,2
+3. qmix + simple_spread + seeds 0,1,2
+4. vdn + simple_spread + seeds 0,1,2
+5. mappo + simple_reference + seeds 0,1,2
+6. ippo + simple_reference + seeds 0,1,2
+7. qmix + simple_reference + seeds 0,1,2
+8. vdn + simple_reference + seeds 0,1,2
+
+Recommended Naming Pattern
+- <algorithm>__<task>__seed<seed>
+- Examples:
+  - mappo__simple_spread__seed0
+  - qmix__simple_reference__seed2
+
+Command Template
+python benchmarl/run.py \
+  algorithm=<algorithm> \
+  task=<task> \
+  seed=<seed> \
+  experiment.prefer_continuous_actions=False \
+  experiment.sampling_device=cpu \
+  experiment.train_device=cuda \
+  experiment.buffer_device=cpu \
+  experiment.max_n_frames=2000000 \
+  experiment.evaluation=True \
+  experiment.render=False \
+  experiment.evaluation_interval=120000 \
+  experiment.evaluation_episodes=5 \
+  'experiment.loggers=[csv]' \
+  experiment.checkpoint_interval=0 \
+  experiment.save_folder=/home/naikewu/RL/BenchMARL/phase1_outputs
+
+
+MAPPO Ablation Plan
+
+Purpose
+- After finishing the 24 Phase 1 runs, run targeted ablations on MAPPO only.
+- The goal is to study which MAPPO/PPO training settings most affect performance and stability.
+- This is meant to mirror the core message of 2103.01955: MAPPO performance is sensitive to implementation and update choices.
+
+Recommended Ablation Task
+- Primary task: pettingzoo/simple_spread
+- Optional validation task after that: pettingzoo/simple_reference
+
+Important Note
+- The Phase 1 comparison mappo vs ippo already acts as a centralized-critic ablation:
+  - mappo = centralized critic
+  - ippo = independent critic
+- So the MAPPO-only ablation should focus on PPO update hyperparameters rather than repeating that comparison.
+
+MAPPO Baseline For Ablations
+- algorithm=mappo
+- task=pettingzoo/simple_spread
+- seeds=0,1,2
+- Keep all Phase 1 fixed parameters unchanged unless explicitly varied below
+
+Ablation Group A: PPO Clip Range
+- Parameter: algorithm.clip_epsilon
+- Values:
+  - 0.05
+  - 0.1
+  - 0.2
+- Reason:
+  - Tests how sensitive MAPPO is to PPO clipping aggressiveness
+  - This is one of the most important factors highlighted by the paper
+
+Ablation Group B: Data Reuse / On-Policy Update Intensity
+- Parameter: experiment.on_policy_n_minibatch_iters
+- Values:
+  - 15
+  - 45
+  - 90
+- Reason:
+  - Tests whether reusing the same collected data too much hurts performance
+  - This corresponds closely to the paper's discussion of training epochs and non-stationarity
+
+Ablation Group C: Minibatch Size
+- Parameter: experiment.on_policy_minibatch_size
+- Values:
+  - 200
+  - 400
+  - 800
+- Reason:
+  - Tests whether smaller or larger PPO minibatches produce more stable updates
+
+Ablation Group D: Frames Per Batch
+- Parameter: experiment.on_policy_collected_frames_per_batch
+- Values:
+  - 3000
+  - 6000
+  - 12000
+- Reason:
+  - Tests whether larger rollout batches improve stability and sample efficiency
+
+Recommended Ablation Order
+1. Baseline MAPPO on simple_spread, seeds 0,1,2
+2. Clip epsilon ablation
+3. on_policy_n_minibatch_iters ablation
+4. on_policy_minibatch_size ablation
+5. on_policy_collected_frames_per_batch ablation
+6. If results are clean and time permits, repeat the most important ablation on simple_reference
+
+Suggested Analysis Questions
+- Does smaller clip_epsilon help MAPPO stability?
+- Does heavier data reuse hurt MAPPO in cooperative MARL?
+- Does larger rollout batch size help MAPPO learn more smoothly?
+- Which hyperparameter causes the largest drop from the baseline?
+
+Approximate MAPPO Ablation Size
+- Reused from Phase 1:
+  - mappo baseline on simple_spread with seeds 0,1,2
+  - default-setting runs already covered by Phase 1
+- New ablation runs only:
+  - 4 ablation groups x 2 non-default settings x 3 seeds = 24 runs
+- Total new runs for Phase 2:
+  - 24 runs on simple_spread
+
+MAPPO Ablation Command Template
+python benchmarl/run.py \
+  algorithm=mappo \
+  task=pettingzoo/simple_spread \
+  seed=<seed> \
+  experiment.prefer_continuous_actions=False \
+  experiment.sampling_device=cpu \
+  experiment.train_device=cuda \
+  experiment.buffer_device=cpu \
+  experiment.max_n_frames=2000000 \
+  experiment.evaluation=True \
+  experiment.render=False \
+  experiment.evaluation_interval=120000 \
+  experiment.evaluation_episodes=5 \
+  'experiment.loggers=[csv]' \
+  experiment.checkpoint_interval=0 \
+  experiment.save_folder=/home/naikewu/RL/BenchMARL/phase1_outputs \
+  <ablation_override>
+
+Examples
+- Clip epsilon = 0.1
+  - algorithm.clip_epsilon=0.1
+- Minibatch iters = 90
+  - experiment.on_policy_n_minibatch_iters=90
+- Minibatch size = 800
+  - experiment.on_policy_minibatch_size=800
+- Frames per batch = 12000
+  - experiment.on_policy_collected_frames_per_batch=12000
+
+MAPPO Ablation Experiment Matrix
+
+Reused From Phase 1
+- mappo baseline on pettingzoo/simple_spread with seeds 0,1,2
+- default MAPPO settings already covered and should not be rerun:
+  - algorithm.clip_epsilon=0.2
+  - experiment.on_policy_n_minibatch_iters=45
+  - experiment.on_policy_minibatch_size=400
+  - experiment.on_policy_collected_frames_per_batch=6000
+
+New Runs Only
+
+Ablation Group A: clip_epsilon
+1. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, algorithm.clip_epsilon=0.05
+2. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, algorithm.clip_epsilon=0.05
+3. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, algorithm.clip_epsilon=0.05
+4. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, algorithm.clip_epsilon=0.1
+5. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, algorithm.clip_epsilon=0.1
+6. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, algorithm.clip_epsilon=0.1
+
+Ablation Group B: on_policy_n_minibatch_iters
+7. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_n_minibatch_iters=15
+8. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_n_minibatch_iters=15
+9. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_n_minibatch_iters=15
+10. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_n_minibatch_iters=90
+11. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_n_minibatch_iters=90
+12. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_n_minibatch_iters=90
+
+Ablation Group C: on_policy_minibatch_size
+13. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_minibatch_size=200
+14. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_minibatch_size=200
+15. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_minibatch_size=200
+16. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_minibatch_size=800
+17. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_minibatch_size=800
+18. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_minibatch_size=800
+
+Ablation Group D: on_policy_collected_frames_per_batch
+19. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_collected_frames_per_batch=3000
+20. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_collected_frames_per_batch=3000
+21. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_collected_frames_per_batch=3000
+22. algorithm=mappo, task=pettingzoo/simple_spread, seed=0, experiment.on_policy_collected_frames_per_batch=12000
+23. algorithm=mappo, task=pettingzoo/simple_spread, seed=1, experiment.on_policy_collected_frames_per_batch=12000
+24. algorithm=mappo, task=pettingzoo/simple_spread, seed=2, experiment.on_policy_collected_frames_per_batch=12000
