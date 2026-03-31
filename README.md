@@ -4,11 +4,9 @@
 
 This repository studies whether the main empirical observations from the IPPO paper also appear in BenchMARL on VMAS tasks.
 
-The original IPPO paper evaluates on SMAC. In this project, the goal is not to exactly reproduce the original numerical scores, but to reproduce the paper's qualitative findings in a different multi-agent benchmark.
-
 ## Attribution
 
-This project is built on top of the original BenchMARL framework rather than being a standalone MARL library. The original BenchMARL project can be found here:
+This project is built on top of the original BenchMARL framework. The original BenchMARL project can be found here:
 
 - GitHub: https://github.com/facebookresearch/BenchMARL
 - Documentation: https://benchmarl.readthedocs.io/
@@ -30,7 +28,6 @@ We use VMAS tasks through BenchMARL, with a focus on cooperative continuous-cont
 
 - `vmas/balance`
 - `vmas/navigation`
-- `vmas/dispersion`
 - `vmas/flocking`
 
 For the main comparison, we use:
@@ -64,10 +61,9 @@ The current Stage A results support the claim that the usefulness of a centraliz
 
 - On `VMAS balance`, MAPPO is clearly stronger and more stable than IPPO.
 - On `VMAS navigation`, IPPO is competitive with MAPPO and appears slightly stronger in the completed runs.
-- On `VMAS dispersion`, the two methods are very similar.
 - On `VMAS flocking`, IPPO outperforms MAPPO by a noticeable margin.
 
-Taken together, these results do not support the idea that MAPPO is uniformly better than IPPO. Instead, they are more consistent with the IPPO paper's observation that independent-critic methods can remain competitive, and that centralized critics help in some tasks but not all tasks.
+These results do not support the idea that MAPPO is uniformly better than IPPO. Instead, they are more consistent with the IPPO paper's observation that independent-critic methods can remain competitive, and that centralized critics help in some tasks but not all tasks.
 
 ### Stage B
 
@@ -105,8 +101,6 @@ Key files in this repository:
   Project task plan and experiment organization notes.
 
 ## Reproducing Effectiveness of PPO in Cooperative, Multi-Agent Games
-
-This section documents our later Project 7 reproduction work on cooperative PettingZoo tasks in BenchMARL. It is added without modifying the original project description above.
 
 ### Reference Paper
 
@@ -163,5 +157,4 @@ Plotting scripts:
 Experiment documentation:
 
 - `experiment_matrix.txt`
-- `PROJECT7_PETTINGZOO_REPRO.md`
 
