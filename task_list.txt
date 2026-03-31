@@ -1,0 +1,296 @@
+BenchMARL 迁移复现计划：可执行版
+
+目标：
+不在 SMAC 上逐数值复现 IPPO 论文，而是在 BenchMARL 的 VMAS cooperative 任务上复现论文观察到的现象。
+
+要检验的 3 个结论：
+1. IPPO 在 cooperative MARL 中不一定明显弱于更复杂的 centralized-critic 方法。
+2. centralized critic（MAPPO）不一定总比 local critic（IPPO）更好，优势依赖具体任务。
+3. PPO 中的 policy clipping 是稳定训练的重要原因；去掉它会明显变差；只把学习率调低不能替代 clipping。
+
+==================================================
+一、当前约束
+==================================================
+
+代码与平台：
+1. 使用当前仓库 BenchMARL。
+2. 只使用 VMAS，不混入 PettingZoo。
+3. Great Lakes 课程账号资源有限，实验矩阵必须控制规模。
+
+当前代码现状：
+1. IPPO 与 MAPPO 主比较可以直接跑。
+2. clipping 消融不能只靠改 yaml 完成。
+3. 目前 BenchMARL 的 IPPO 实现使用 ClipPPOLoss，公开配置里只有 clip_epsilon。
+4. 若要做 no-vclip、no-pclip、no-clip、no-clip-low-lr，需要先修改算法实现，加入独立开关。
+
+因此：
+1. 主比较实验可以立即开始。
+2. clipping 消融实验必须在“代码改造完成”后再开始。
+
+==================================================
+二、统一实验协议
+==================================================
+
+所有正式实验统一遵守：
+1. task 参数保持默认，不改 task yaml。
+2. model 使用默认 MLP，不为某个算法单独改网络。
+3. 除了当前实验明确要改的变量，其余 experiment 配置保持一致。
+4. 所有结果保存 csv。
+5. 正式对比优先使用相同硬件类型；如果混用硬件，报告里必须注明。
+6. 最终结果不能只报单个 seed。
+
+推荐统一配置：
+1. 正式主比较：2M frames
+2. evaluation_interval：120000
+3. evaluation_episodes：5
+4. loggers：[csv]
+5. render：false
+
+seeds 方案：
+1. 第一轮正式实验：0,1,2
+2. 若结论不稳，再扩成：0,1,2,3,4
+
+说明：
+1. 2M frames 是迁移复现预算，不是论文在 SMAC 上的原始预算。
+2. 300K 只用于 timing / smoke test，不作为最终结论依据。
+
+==================================================
+三、阶段 0：已完成的准备工作
+==================================================
+
+已经完成：
+1. 300K timing test
+2. V100 / A40 / A100 MIG 速度比较
+3. V100 上 3M 的单任务测试
+
+目前结论：
+1. 300K 不足以判断完全收敛。
+2. 3M 在 vmas/balance 上表现明显高于 300K，但成本较高。
+3. 对当前资源条件，更适合先用 2M 做统一主比较。
+
+因此：
+1. 不再重复 pilot。
+2. 从正式主比较开始。
+
+==================================================
+四、阶段 1：正式实验 A（IPPO vs MAPPO 主比较）
+==================================================
+
+目的：
+复现论文的前两个结论：
+1. IPPO 是否具有竞争力。
+2. centralized critic 是否一定优于 local critic。
+
+任务集合：
+1. vmas/balance
+2. vmas/navigation
+3. vmas/simple_spread
+
+选择理由：
+1. balance：你已经测过，流程稳定。
+2. navigation：适合观察 cooperative coordination。
+3. simple_spread：常见 cooperative benchmark，便于解释结果。
+
+算法集合：
+1. ippo
+2. mappo
+
+第一轮 seeds：
+1. 0
+2. 1
+3. 2
+
+每个训练：
+1. 2M frames
+
+阶段 A 统一运行参数：
+1. experiment.max_n_frames=2000000
+2. experiment.evaluation=true
+3. experiment.evaluation_interval=120000
+4. experiment.evaluation_episodes=5
+5. experiment.render=false
+6. experiment.loggers=[csv]
+7. experiment.sampling_device=cuda
+8. experiment.train_device=cuda
+9. experiment.buffer_device=cuda
+10. model=layers/mlp
+11. critic_model=layers/mlp
+
+阶段 A 保持 BenchMARL 默认：
+1. ippo 和 mappo 的 algorithm yaml 默认参数不改
+2. task yaml 默认参数不改
+3. experiment.lr 保持默认
+4. on_policy_collected_frames_per_batch 保持默认
+5. on_policy_n_envs_per_worker 保持默认
+6. on_policy_n_minibatch_iters 保持默认
+7. on_policy_minibatch_size 保持默认
+
+总训练数：
+3 个任务 x 2 个算法 x 3 个 seeds = 18 runs
+
+完整列表：
+A1-A3:
+1. task: vmas/balance, algorithm: ippo, seeds: 0,1,2
+
+A4-A6:
+1. task: vmas/balance, algorithm: mappo, seeds: 0,1,2
+
+A7-A9:
+1. task: vmas/navigation, algorithm: ippo, seeds: 0,1,2
+
+A10-A12:
+1. task: vmas/navigation, algorithm: mappo, seeds: 0,1,2
+
+A13-A15:
+1. task: vmas/simple_spread, algorithm: ippo, seeds: 0,1,2
+
+A16-A18:
+1. task: vmas/simple_spread, algorithm: mappo, seeds: 0,1,2
+
+阶段 A 要回答的问题：
+1. IPPO 在哪些任务上接近 MAPPO？
+2. MAPPO 在哪些任务上明显更强？
+3. 是否存在 centralized critic 没有明显收益的任务？
+4. 差异主要体现在最终性能，还是训练稳定性 / 样本效率？
+
+阶段 A 的停止条件：
+1. 如果 3 seeds 的均值趋势已经很清楚，可以先写阶段性结论。
+2. 如果 3 seeds 之间方差很大，再补 2 个 seeds 到 5 seeds。
+
+==================================================
+五、阶段 2：实现 clipping 消融所需代码
+==================================================
+
+这一步不是跑实验，而是改代码。
+
+目标：
+给 IPPO 增加独立开关，使下面 5 个变体真的可运行：
+1. full
+2. no-vclip
+3. no-pclip
+4. no-clip
+5. no-clip-low-lr
+
+最小实现要求：
+1. 可以独立关闭 policy clipping。
+2. 可以独立关闭 value clipping。
+3. 可以同时关闭两者。
+4. 低学习率版本只改 lr，其余不变。
+
+完成标准：
+1. 新增配置项可通过 yaml 或 hydra override 控制。
+2. 至少有 1 个 smoke test 能证明 full 与 no-clip 都能正常启动。
+
+没有完成这一步之前，不进入阶段 3。
+
+==================================================
+六、阶段 3：正式实验 B（IPPO clipping 消融）
+==================================================
+
+前提：
+阶段 2 的代码改造已经完成。
+
+目的：
+复现论文第三个结论：
+1. policy clipping 是关键机制。
+2. 去掉 clipping 会明显变差。
+3. 低学习率不能替代 clipping。
+
+任务选择：
+优先只选 1 个任务，先做最小可解释消融。
+
+首选任务：
+1. vmas/navigation
+
+备选任务：
+1. vmas/balance
+
+第一轮只跑 1 个任务，原因：
+1. 先验证机制结论是否能出来。
+2. 避免在代码改造后一次性扩大实验规模。
+
+变体集合：
+1. full
+2. no-vclip
+3. no-pclip
+4. no-clip
+5. no-clip-low-lr
+
+seeds：
+1. 0
+2. 1
+3. 2
+
+每个训练：
+1. 2M frames
+
+总训练数：
+1 个任务 x 5 个变体 x 3 个 seeds = 15 runs
+
+如果第一轮结果清楚，再扩到第二个任务：
+1. vmas/simple_spread 或 vmas/balance
+
+阶段 B 要回答的问题：
+1. 去掉 policy clipping 后，性能是否显著下降？
+2. 去掉 value clipping 后，影响是否较小或任务依赖？
+3. no-clip 是否最不稳定？
+4. no-clip-low-lr 是否仍明显弱于 full？
+
+==================================================
+七、结果汇报方式
+==================================================
+
+主图：
+1. 每个任务一张 eval reward vs frames 曲线图。
+2. 曲线：IPPO vs MAPPO。
+3. 先画 3 seeds 的均值与标准差带。
+
+主表：
+1. 行：task
+2. 列：IPPO final eval reward, MAPPO final eval reward, 哪个更好, std
+
+消融图：
+1. 每个任务一张 eval reward vs frames 曲线图。
+2. 曲线：full / no-vclip / no-pclip / no-clip / no-clip-low-lr
+
+消融表：
+1. 比较 5 个变体的最终 eval reward 与 std。
+2. 重点比较：
+3. full vs no-pclip
+4. no-clip vs no-clip-low-lr
+
+训练曲线：
+1. 可作为附图展示。
+2. 正式结论优先基于 eval 曲线，不优先基于 train 曲线。
+
+==================================================
+八、结论模板
+==================================================
+
+如果阶段 A 支持论文方向：
+1. 在部分 VMAS cooperative 任务上，IPPO 可以接近甚至匹配 MAPPO。
+2. centralized critic 的收益依赖任务，不是无条件成立。
+
+如果阶段 B 也支持论文方向：
+1. 去掉 policy clipping 会显著损害稳定性或最终性能。
+2. 仅降低学习率不能恢复 full IPPO 的表现。
+
+如果阶段 A 不支持论文方向：
+1. 在当前 VMAS 任务集上，MAPPO 整体明显优于 IPPO。
+2. 这说明论文结论可能具有环境依赖性。
+
+即便阶段 A 不支持，如果阶段 B 支持：
+1. 仍然可以保留“policy clipping 是关键机制”这一机制性结论。
+
+==================================================
+九、最小必须完成的版本
+==================================================
+
+如果时间不够，最低限度完成：
+1. 阶段 A：3 个任务，IPPO vs MAPPO，3 seeds，共 18 runs
+2. 阶段 B：1 个任务，5 个 clipping 变体，3 seeds，共 15 runs
+
+总计：
+1. 33 runs
+
+这是当前资源条件下，最小但仍然能支撑“迁移复现论文关键现象”的版本。

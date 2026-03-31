@@ -15,7 +15,7 @@ from torch.distributions import Categorical
 from torchrl.data import Composite, Unbounded
 from torchrl.modules import IndependentNormal, ProbabilisticActor, TanhNormal
 from torchrl.modules.distributions import MaskedCategorical
-from torchrl.objectives import ClipPPOLoss, LossModule, ValueEstimators
+from torchrl.objectives import ClipPPOLoss, LossModule, PPOLoss, ValueEstimators
 
 from benchmarl.algorithms.common import Algorithm, AlgorithmConfig
 from benchmarl.models.common import ModelConfig
@@ -28,6 +28,10 @@ class Ippo(Algorithm):
         share_param_critic (bool): Whether to share the parameters of the critics withing agent groups
         clip_epsilon (scalar): weight clipping threshold in the clipped PPO loss equation.
         entropy_coef (scalar): entropy multiplier when computing the total loss.
+        use_policy_clipping (bool): if ``True``, use the clipped PPO objective.
+            If ``False``, use the unclipped PPO objective.
+        use_value_clipping (bool): if ``True``, clip critic updates using
+            ``clip_epsilon`` as the threshold.
         critic_coef (scalar): critic loss multiplier when computing the total
         loss_critic_type (str): loss function for the value discrepancy.
             Can be one of "l1", "l2" or "smooth_l1".
@@ -46,7 +50,9 @@ class Ippo(Algorithm):
         self,
         share_param_critic: bool,
         clip_epsilon: float,
-        entropy_coef: bool,
+        entropy_coef: float,
+        use_policy_clipping: bool,
+        use_value_clipping: bool,
         critic_coef: float,
         loss_critic_type: str,
         lmbda: float,
@@ -60,6 +66,8 @@ class Ippo(Algorithm):
         self.share_param_critic = share_param_critic
         self.clip_epsilon = clip_epsilon
         self.entropy_coef = entropy_coef
+        self.use_policy_clipping = use_policy_clipping
+        self.use_value_clipping = use_value_clipping
         self.critic_coef = critic_coef
         self.loss_critic_type = loss_critic_type
         self.lmbda = lmbda
@@ -74,16 +82,22 @@ class Ippo(Algorithm):
     def _get_loss(
         self, group: str, policy_for_loss: TensorDictModule, continuous: bool
     ) -> Tuple[LossModule, bool]:
-        # Loss
-        loss_module = ClipPPOLoss(
+        # Phase B ablations need policy clipping and value clipping to be
+        # controlled independently. BenchMARL previously only enabled the
+        # clipped PPO objective, leaving value clipping at the TorchRL default.
+        loss_class = ClipPPOLoss if self.use_policy_clipping else PPOLoss
+        loss_kwargs = dict(
             actor=policy_for_loss,
             critic=self.get_critic(group),
-            clip_epsilon=self.clip_epsilon,
             entropy_coeff=self.entropy_coef,
             critic_coeff=self.critic_coef,
             loss_critic_type=self.loss_critic_type,
             normalize_advantage=False,
+            clip_value=self.clip_epsilon if self.use_value_clipping else None,
         )
+        if self.use_policy_clipping:
+            loss_kwargs["clip_epsilon"] = self.clip_epsilon
+        loss_module = loss_class(**loss_kwargs)
         loss_module.set_keys(
             reward=(group, "reward"),
             action=(group, "action"),
@@ -303,6 +317,8 @@ class IppoConfig(AlgorithmConfig):
     share_param_critic: bool = MISSING
     clip_epsilon: float = MISSING
     entropy_coef: float = MISSING
+    use_policy_clipping: bool = MISSING
+    use_value_clipping: bool = MISSING
     critic_coef: float = MISSING
     loss_critic_type: str = MISSING
     lmbda: float = MISSING

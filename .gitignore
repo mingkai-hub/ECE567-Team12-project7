@@ -1,8 +1,50 @@
 ### Python template
 
+# Project-specific experiment outputs
+logs/
+outputs_3m_test/
+outputs_smoke/
+outputs_smoke_phaseb/
+outputs_stage_a/
+outputs_stage_b/
+outputs_stage_b_round2/
+outputs_timing/
+outputs_timing_a100mig/
+outputs_timing_a40/
+
+# Local helper / notes
+.codex/
+.codex
+Commands.txt
+IPPO.pdf
+List of Projects.pdf
+
+# Exploratory / intermediate plotting scripts
+plot_benchmarl_curves.py
+plot_stage_a_overview.py
+plot_stage_b_navigation_ablation.py
+plot_stage_b_round2_only.py
+plot_stage_b_round_compare.py
+
+# Exploratory / timing / smoke sbatch scripts
+*.sbatch
+run_18runs_to_home.sbatch
+run_stage_a_joint_passage.sbatch
+run_vmas_timing_test.sbatch
+run_vmas_timing_test_a100mig.sbatch
+run_vmas_timing_test_a40.sbatch
+run_vmas_v100_3m_test.sbatch
+smoke_test.sbatch
+train_ippo.sbatch
+
 # Hydra
 **/outputs/
 **/multirun/
+
+# Keep only final report-ready figures from plots/
+plots/*
+!plots/report_2x2_stageA_stageB_clean.png
+!plots/report_2x2_stageA_stageB_train_clean.png
 
 # Docs
 docs/output/
