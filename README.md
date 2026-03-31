@@ -106,3 +106,69 @@ Key files in this repository:
 
 - Large experiment outputs, logs, and intermediate files are excluded from version control.
 - This repository is based on the original BenchMARL project, while the README here is project-specific and documents only the reproduction work carried out for this course project.
+
+## Additional Project 7 Reproduction Notes
+
+This section documents our later Project 7 reproduction work on cooperative PettingZoo tasks in BenchMARL. It is added without modifying the original project description above.
+
+### Reference Paper
+
+- Chao Yu et al., *The Surprising Effectiveness of PPO in Cooperative, Multi-Agent Games*
+- arXiv: https://arxiv.org/abs/2103.01955
+
+### Framework and Tasks
+
+We use BenchMARL with PettingZoo and focus on:
+
+- `simple_spread`
+- `simple_reference`
+
+### Phase 1
+
+Phase 1 compares four baselines:
+
+- MAPPO
+- IPPO
+- VDN
+- IQL
+
+The main experiment configuration uses:
+
+- discrete actions
+- 2M total environment frames
+- evaluation every 120k frames
+- 5 evaluation episodes
+- MLP policy/critic with hidden sizes `[256, 256]`
+
+### Phase 2
+
+Phase 2 studies MAPPO ablations on `pettingzoo/simple_spread`, focusing on:
+
+- PPO clip epsilon
+- update iterations
+- minibatch-related settings
+- batch size
+
+### Reproduction Scripts Added in This Repository
+
+Plotting scripts:
+
+- `plot_phase1_curves.py`
+- `plot_phase2_clip_progress.py`
+- `plot_phase2_progress_overview.py`
+- `plot_phase2_completed_0_20.py`
+- `plot_phase2_completed_all.py`
+- `plot_phase2_completed_n_not_3.py`
+- `plot_phase2_first_version_all.py`
+- `plot_all_completed_three_panel.py`
+- `plot_all_completed_three_panel_training.py`
+
+Experiment documentation:
+
+- `experiment_matrix.txt`
+- `PROJECT7_PETTINGZOO_REPRO.md`
+
+### Notes for Reproduction
+
+- Large logs, outputs, and intermediate result folders are intentionally excluded from version control.
+- The scripts above are the main files needed to reproduce the reported Phase 1 and Phase 2 figures in our PettingZoo study.
