@@ -1,4 +1,6 @@
-# Reproducing IPPO Phenomena in BenchMARL on VMAS
+# Multi-agent Reinforcement Learning
+
+## Reproducing IPPO Phenomena in BenchMARL on VMAS
 
 This repository studies whether the main empirical observations from the IPPO paper also appear in BenchMARL on VMAS tasks.
 
@@ -102,12 +104,7 @@ Key files in this repository:
 - `task_list.txt`
   Project task plan and experiment organization notes.
 
-## Notes
-
-- Large experiment outputs, logs, and intermediate files are excluded from version control.
-- This repository is based on the original BenchMARL project, while the README here is project-specific and documents only the reproduction work carried out for this course project.
-
-## Additional Project 7 Reproduction Notes
+## Reproducing Effectiveness of PPO in Cooperative, Multi-Agent Games
 
 This section documents our later Project 7 reproduction work on cooperative PettingZoo tasks in BenchMARL. It is added without modifying the original project description above.
 
@@ -168,7 +165,3 @@ Experiment documentation:
 - `experiment_matrix.txt`
 - `PROJECT7_PETTINGZOO_REPRO.md`
 
-### Notes for Reproduction
-
-- Large logs, outputs, and intermediate result folders are intentionally excluded from version control.
-- The scripts above are the main files needed to reproduce the reported Phase 1 and Phase 2 figures in our PettingZoo study.
